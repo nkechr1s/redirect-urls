@@ -16,3 +16,14 @@ var urls = []models.URL{
 func GetUrls(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, urls)
 }
+
+func GetUrlByID(c *gin.Context) {
+	id := c.Param("id")
+	for _, a := range urls {
+		if a.ID == id {
+			c.IndentedJSON(http.StatusOK, a)
+			return
+		}
+	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "url not found"})
+}
