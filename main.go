@@ -14,5 +14,6 @@ func main() {
 	router := gin.Default()
 	router.GET("/urls", handlers.GetUrls)
 	router.GET("/urls/:id", handlers.GetUrlByID)
+	router.POST("/urls", handlers.CreateUrl)
 	router.Run("localhost:8080")
 }

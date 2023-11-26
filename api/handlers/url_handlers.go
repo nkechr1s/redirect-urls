@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"redirectUrls/api/models"
 
@@ -48,4 +49,30 @@ func GetUrlByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": url})
+}
+
+func CreateUrl(c *gin.Context) {
+	var newURL models.URL
+	if err := c.ShouldBindJSON(&newURL); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "error": err.Error()})
+		return
+	}
+
+	result, err := db.Exec("INSERT INTO urls (currentUrl, redirectUrl) VALUES (?, ?)", newURL.CurrentUrl, newURL.RedirectUrl)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	// Get the auto-incremented ID of the newly inserted URL
+	newID, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	// Update the ID of the newURL before sending it back in the response
+	newURL.ID = fmt.Sprintf("%d", newID)
+
+	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "data": newURL})
 }
