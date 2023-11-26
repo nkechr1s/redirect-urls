@@ -2,41 +2,12 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
-	"os"
-
 	"redirectUrls/api/models"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
-
-var db *sql.DB
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		panic(fmt.Errorf("Error loading .env file: %s", err))
-	}
-	dbHost := os.Getenv("DB_HOST")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-
-	dbSource := fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPassword, dbHost, dbName)
-
-	var openErr error
-	db, openErr = sql.Open("mysql", dbSource)
-	if openErr != nil {
-		panic(openErr.Error())
-	}
-	pingErr := db.Ping()
-	if pingErr != nil {
-		panic(pingErr.Error())
-	}
-}
 
 func GetUrls(c *gin.Context) {
 	rows, err := db.Query("SELECT id, currentUrl, redirectUrl FROM urls")
