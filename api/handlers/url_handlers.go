@@ -19,9 +19,9 @@ func GetUrls(c *gin.Context) {
 
 func GetUrlByID(c *gin.Context) {
 	id := c.Param("id")
-	for _, a := range urls {
-		if a.ID == id {
-			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": a})
+	for _, url := range urls {
+		if url.ID == id {
+			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": url})
 			return
 		}
 	}
