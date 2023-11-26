@@ -88,3 +88,27 @@ func CreateUrl(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "data": newURL})
 }
+
+func DeleteUrlByID(c *gin.Context) {
+	id := c.Param("id")
+
+	// Check if the URL with the given ID exists
+	var existingID string
+	err := db.QueryRow("SELECT id FROM urls WHERE id = ?", id).Scan(&existingID)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "URL not found"})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	// Perform the deletion
+	_, err = db.Exec("DELETE FROM urls WHERE id = ?", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "URL deleted successfully"})
+}
