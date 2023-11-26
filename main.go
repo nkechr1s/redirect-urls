@@ -16,5 +16,6 @@ func main() {
 	router.GET("/urls/:id", handlers.GetUrlByID)
 	router.POST("/urls", handlers.CreateUrl)
 	router.DELETE("/urls/:id", handlers.DeleteUrlByID)
+	router.PATCH("/urls/:id", handlers.PatchUrlByID)
 	router.Run("localhost:8080")
 }

@@ -69,7 +69,6 @@ func CreateUrl(c *gin.Context) {
 		return
 	}
 
-	// Insert the new URL into the database
 	result, err := db.Exec("INSERT INTO urls (currentUrl, redirectUrl) VALUES (?, ?)", newURL.CurrentUrl, newURL.RedirectUrl)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
@@ -83,7 +82,6 @@ func CreateUrl(c *gin.Context) {
 		return
 	}
 
-	// Update the ID of the newURL before sending it back in the response
 	newURL.ID = fmt.Sprintf("%d", newID)
 
 	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "data": newURL})
@@ -92,7 +90,6 @@ func CreateUrl(c *gin.Context) {
 func DeleteUrlByID(c *gin.Context) {
 	id := c.Param("id")
 
-	// Check if the URL with the given ID exists
 	var existingID string
 	err := db.QueryRow("SELECT id FROM urls WHERE id = ?", id).Scan(&existingID)
 	if err == sql.ErrNoRows {
@@ -103,7 +100,6 @@ func DeleteUrlByID(c *gin.Context) {
 		return
 	}
 
-	// Perform the deletion
 	_, err = db.Exec("DELETE FROM urls WHERE id = ?", id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
@@ -111,4 +107,38 @@ func DeleteUrlByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "URL deleted successfully"})
+}
+
+func PatchUrlByID(c *gin.Context) {
+	id := c.Param("id")
+
+	var existingID string
+	err := db.QueryRow("SELECT id FROM urls WHERE id = ?", id).Scan(&existingID)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "URL not found"})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	var existingURL models.URL
+	err = db.QueryRow("SELECT id, currentUrl, redirectUrl FROM urls WHERE id = ?", id).
+		Scan(&existingURL.ID, &existingURL.CurrentUrl, &existingURL.RedirectUrl)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	if err := c.ShouldBindJSON(&existingURL); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "error": err.Error()})
+		return
+	}
+	_, err = db.Exec("UPDATE urls SET redirectUrl = ? WHERE id = ?", existingURL.RedirectUrl, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": existingURL})
 }
