@@ -58,6 +58,18 @@ func CreateUrl(c *gin.Context) {
 		return
 	}
 
+	// Check if the currentUrl already exists in the database
+	var existingID string
+	err := db.QueryRow("SELECT id FROM urls WHERE currentUrl = ?", newURL.CurrentUrl).Scan(&existingID)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{"status": http.StatusConflict, "message": "URL already exists with the given currentUrl"})
+		return
+	} else if err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
+		return
+	}
+
+	// Insert the new URL into the database
 	result, err := db.Exec("INSERT INTO urls (currentUrl, redirectUrl) VALUES (?, ?)", newURL.CurrentUrl, newURL.RedirectUrl)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": err.Error()})
