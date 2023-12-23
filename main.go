@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"redirectUrls/api/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -19,9 +18,6 @@ func main() {
 	router.DELETE("/urls/:id", handlers.DeleteUrlByID)
 	router.PATCH("/urls/:id", handlers.PatchUrlByID)
 
-	router.POST("/generate-nginx-config", func(c *gin.Context) {
-		handlers.FetchUrls()
-		c.JSON(http.StatusOK, gin.H{"message": "NGINX configuration file generated successfully"})
-	})
+	router.POST("/generate-nginx-config", handlers.GenerateNginxConfig)
 	router.Run("localhost:8080")
 }

@@ -7,83 +7,91 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+
+	"github.com/gin-gonic/gin"
 )
 
-func FetchUrls() {
+func FetchUrls() (map[string]interface{}, error) {
 	// Fetch data from the /urls endpoint
 	urlsEndpoint := "http://localhost:8080/urls"
 	response, err := http.Get(urlsEndpoint)
 	if err != nil {
-		fmt.Println("Error fetching data from the /urls endpoint:", err)
-		return
+		return nil, fmt.Errorf("error fetching data from the /urls endpoint: %v", err)
 	}
 	defer response.Body.Close()
 
 	// Read the response body
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
-		return
+		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
 
 	// Unmarshal JSON data
 	var data map[string]interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		fmt.Println("Error decoding JSON:", err)
-		return
+		return nil, fmt.Errorf("error decoding JSON: %v", err)
 	}
 
-	// Create NGINX configuration file
-	err = CreateNginxConfig(data)
-	if err != nil {
-		fmt.Println("Error creating NGINX configuration file:", err)
-		return
-	}
-
-	fmt.Println("NGINX configuration file created successfully.")
+	return data, nil
 }
 
-// createNginxConfig generates the NGINX configuration file based on the provided data
-func CreateNginxConfig(data map[string]interface{}) error {
-	// Open or create NGINX configuration file
-	file, err := os.Create("/etc/dynamic_redirects")
+func CreateNginxConfig(data map[string]interface{}, filePath string) error {
+	file, err := os.Create(filePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating NGINX configuration file: %v", err)
 	}
 	defer file.Close()
 
 	// Define NGINX configuration template
+	//Replace example.com with the actual domain
 	nginxConfigTemplate := `
-server {
-    listen 80;
-    server_name example.com;
-
-{{range .data}}
-    location {{.CurrentURL}} {
-        return 301 http://example.com{{.RedirectURL}};
-    }
-{{end}}
-
-    location / {
-        # Your default configuration for other requests
-    }
-
-    # Other server configurations...
-}
-`
+	server {
+		listen 80;
+		server_name example.com;
+	
+	{{range .data}}
+		location {{.currentUrl}} {
+			return 301 http://example.com{{.redirectUrl}};
+		}
+	{{end}}
+	
+		location / {
+			# Your default configuration for other requests
+		}
+	
+		# Other server configurations...
+	}
+	`
 
 	// Parse the template
 	tmpl, err := template.New("nginxConfig").Parse(nginxConfigTemplate)
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing NGINX configuration template: %v", err)
 	}
 
 	// Execute the template and write to the NGINX configuration file
 	err = tmpl.Execute(file, data)
 	if err != nil {
-		return err
+		return fmt.Errorf("error executing template and writing to NGINX configuration file: %v", err)
 	}
 
 	return nil
+}
+
+func GenerateNginxConfig(c *gin.Context) {
+	data, err := FetchUrls()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	//should replace the path with the actual nginx
+	//file path on the server now this saves it inside this project
+	err = CreateNginxConfig(data, "etc/nginx.conf")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "NGINX configuration file generated successfully"})
 }
