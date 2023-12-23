@@ -13,7 +13,8 @@ import (
 
 func FetchUrls() (map[string]interface{}, error) {
 	// Fetch data from the /urls endpoint
-	urlsEndpoint := "http://localhost:8080/urls"
+	endpoint := os.Getenv("MICROSERVICE_ENDPOINT")
+	urlsEndpoint := endpoint + "/urls"
 	response, err := http.Get(urlsEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching data from the /urls endpoint: %v", err)
