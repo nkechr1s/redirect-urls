@@ -53,7 +53,7 @@ func CreateNginxConfig(data map[string]interface{}, filePath string) error {
 	
 	{{range .data}}
 		location {{.currentUrl}} {
-			return 301 http://example.com{{.redirectUrl}};
+			return 301 https://example.com{{.redirectUrl}};
 		}
 	{{end}}
 	
