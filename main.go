@@ -17,5 +17,7 @@ func main() {
 	router.POST("/urls", handlers.CreateUrl)
 	router.DELETE("/urls/:id", handlers.DeleteUrlByID)
 	router.PATCH("/urls/:id", handlers.PatchUrlByID)
+
+	router.POST("/generate-nginx-config", handlers.GenerateNginxConfig)
 	router.Run("localhost:8080")
 }
