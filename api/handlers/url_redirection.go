@@ -45,7 +45,7 @@ func CreateNginxConfig(data map[string]interface{}, filePath string) error {
 	defer file.Close()
 
 	// Define NGINX configuration template
-	//Replace example.com with the actual domain
+	//Replace example.com with the actual domain or add it on env
 	nginxConfigTemplate := `
 	server {
 		listen 80;
